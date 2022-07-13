@@ -86,6 +86,35 @@ pipeline {
 				echo "Integration Test"
 			}
 		}
+
+		stage('Package') {
+			steps {
+				sh "mvn package -DskipTests"
+				echo "Package"
+			}
+		}
+			
+		}
+
+		stage('Build Docker Image') {
+			steps {
+				// docker build -t baldehalfa/currency-exchange-devops:$env.BUILD_TAG
+				script {
+					dockerImage = docker.build("baldehalfa/currency-exchange-devops:${env.BUILD_TAG}")
+				}
+			}
+		}
+		stage('Push Docker Image') {
+			steps {
+				script {
+					docker.withRegistry('', 'dockerhub') {
+						dockerImage.push("baldehalfa/currency-exchange-devops:${env.BUILD_TAG}");
+						dockerImage.push('latest');
+					}
+					
+				}
+			}
+		}
 	} 
 	post {
 		always {
